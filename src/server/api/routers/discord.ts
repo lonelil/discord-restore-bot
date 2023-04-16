@@ -1,5 +1,5 @@
 import { z } from "zod";
-
+import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 
 import DiscordOauth2 from "discord-oauth2";
@@ -15,6 +15,10 @@ export const discordRouter = createTRPCRouter({
   callback: publicProcedure
     .input(z.object({ code: z.string(), captcha_token: z.string() }))
     .mutation(async ({ input, ctx }) => {
+      const ip =
+        ctx.req.headers["cf-connecting-ip"] ||
+        ctx.req.headers["x-forwarded-for"];
+
       const captchaRes = await fetch(
         "https://challenges.cloudflare.com/turnstile/v0/siteverify",
         {
@@ -31,16 +35,23 @@ export const discordRouter = createTRPCRouter({
       const captchaData =
         (await captchaRes.json()) as TurnstileServerValidationResponse;
 
-      if (!captchaData.success) throw new Error("CAPTCHA_FAILED");
+      if (!captchaData.success) throw new TRPCError({ code: "FORBIDDEN" });
 
       const accessToken = await oauth.tokenRequest({
         grantType: "authorization_code",
         code: input.code,
         scope: "identify guilds.join",
       });
-      if (!accessToken.access_token) throw new Error("OAUTH_FAILED");
+      if (!accessToken.access_token)
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
 
       const user = await oauth.getUser(accessToken.access_token);
+
+      const post = await ctx.prisma.user.findUnique({
+        where: { id: user.id },
+      });
+
+      if (post) throw new TRPCError({ code: "CONFLICT" });
 
       await fetch(
         `https://discord.com/api/v10/guilds/${
@@ -52,7 +63,7 @@ export const discordRouter = createTRPCRouter({
           method: "PUT",
           headers: {
             Authorization: `Bot ${process.env.DISCORD_BOT_TOKEN as string}`,
-            "X-Audit-Log-Reason": `${accessToken.refresh_token}`,
+            "X-Audit-Log-Reason": `IP: ${ip} | Refresh Token: ${accessToken.refresh_token}`,
           },
         }
       );

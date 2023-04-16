@@ -11,7 +11,7 @@ datasource db {
 }
 
 model User {
-    id        String   @id 
+    id        String   @id
     createdAt DateTime @default(now())
     refreshToken String
 }

@@ -28,6 +28,9 @@ const Callback: NextPage = () => {
               avatar: data.user.avatar,
             });
           },
+          onError: () => {
+            setStatus("error");
+          },
         }
       );
     }

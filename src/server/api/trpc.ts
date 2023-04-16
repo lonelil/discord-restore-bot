@@ -30,11 +30,11 @@ type CreateContextOptions = Record<string, never>;
  *
  * @see https://create.t3.gg/en/usage/trpc#-serverapitrpcts
  */
-const createInnerTRPCContext = (_opts: CreateContextOptions) => {
+/*const createInnerTRPCContext = (_opts: CreateContextOptions) => {
   return {
     prisma,
   };
-};
+};*/
 
 /**
  * This is the actual context you will use in your router. It will be used to process every request
@@ -42,8 +42,13 @@ const createInnerTRPCContext = (_opts: CreateContextOptions) => {
  *
  * @see https://trpc.io/docs/context
  */
-export const createTRPCContext = (_opts: CreateNextContextOptions) => {
-  return createInnerTRPCContext({});
+export const createTRPCContext = (opts: CreateNextContextOptions) => {
+  const { req } = opts;
+
+  return {
+    prisma,
+    req,
+  };
 };
 
 /**
