@@ -11,22 +11,14 @@ const Callback: NextPage = () => {
   const { mutate } = api.discord.callback.useMutation();
   const [token, setToken] = useState("");
   const [status, setStatus] = useState("waiting");
-  const [user, setUser] = useState({
-    username: "",
-    avatar: "",
-  });
 
   useEffect(() => {
     if (code && token) {
       mutate(
         { code: code as string, captcha_token: token },
         {
-          onSuccess: (data) => {
+          onSuccess: () => {
             setStatus("success");
-            setUser({
-              username: data.user.username,
-              avatar: data.user.avatar,
-            });
           },
           onError: () => {
             setStatus("error");
@@ -59,11 +51,7 @@ const Callback: NextPage = () => {
       )}
 
       {status === "success" && (
-        <Card
-          title={`Hello, ${user.username}!`}
-          subtitle="Thank you for verifying your account and joining our Discord server."
-          image={user.avatar}
-        />
+        <Card subtitle="Thank you for verifying your account and joining our Discord server." />
       )}
     </>
   );

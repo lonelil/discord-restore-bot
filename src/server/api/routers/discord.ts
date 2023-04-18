@@ -47,12 +47,6 @@ export const discordRouter = createTRPCRouter({
 
       const user = await oauth.getUser(accessToken.access_token);
 
-      const post = await ctx.prisma.user.findUnique({
-        where: { id: user.id },
-      });
-
-      if (post) throw new TRPCError({ code: "CONFLICT" });
-
       await fetch(
         `https://discord.com/api/v10/guilds/${
           process.env.DISCORD_GUILD_ID as string
@@ -68,8 +62,12 @@ export const discordRouter = createTRPCRouter({
         }
       );
 
-      await ctx.prisma.user.create({
-        data: {
+      await ctx.prisma.user.upsert({
+        where: { id: user.id },
+        update: {
+          refreshToken: accessToken.refresh_token,
+        },
+        create: {
           id: user.id,
           refreshToken: accessToken.refresh_token,
         },
