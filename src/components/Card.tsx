@@ -9,7 +9,7 @@ export default function Card({
   image?: string;
 }) {
   return (
-    <div className="flex items-center space-x-2">
+    <div className="flex items-center space-x-2 p-2 bg-zinc-600">
       <Image
         src={image || (process.env.NEXT_PUBLIC_LOGO as string)}
         alt={title || (process.env.NEXT_PUBLIC_NAME as string)}
