@@ -74,13 +74,8 @@ export const discordRouter = createTRPCRouter({
       });
 
       return {
-        ok: true,
-        user: {
-          username: user.username,
-          avatar: user.avatar
-            ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png?size=128`
-            : "",
-        },
+        error: false,
+        success: true,
       };
     }),
 });
